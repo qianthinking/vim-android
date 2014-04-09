@@ -13,7 +13,12 @@ endfunction
 function! s:addLibJarClassPath(dir, jars)
   let wildignore = &wildignore
   let &wildignore = ''
-  for jarfile in split(globpath(a:dir . "/libs/", "*.jar"), '\n')
+  if isdirectory(a:dir . "/build/libs/")
+    let l:libs_path = a:dir . "/build/libs/"
+  else
+    let l:libs_path = a:dir . "/libs/"
+  end
+  for jarfile in split(globpath(l:libs_path, "*.jar"), '\n')
     if index(s:oldjars, jarfile) == -1 && index(a:jars, jarfile) == -1
       call add(a:jars, jarfile)
     endif
