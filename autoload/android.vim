@@ -28,7 +28,7 @@ function! android#isAndroidCompilerSet()
 endfunction
 
 function! android#isAndroidProject()
-  return filereadable("AndroidManifest.xml")
+  return filereadable("AndroidManifest.xml") || filereadable("app/AndroidManifest.xml")
 endfunction
 
 function! android#isGradleProject()
@@ -67,7 +67,7 @@ function! android#getBuildType()
     return g:android_build_type
   endif
 
-  let l:gradle_cfg_exists = filereadable('build.gradle')
+  let l:gradle_cfg_exists = filereadable('build.gradle') || filereadable('app/build.gradle')
   let l:gradle_bin_exists = executable(gradle#bin())
   let l:ant_cfg_exists = filereadable('build.xml')
   let l:ant_bin_exists = executable(ant#bin())
@@ -172,8 +172,13 @@ endfunction
 " not found.
 function! android#packageName()
   if ! exists("s:androidPackageName")
-    if filereadable('AndroidManifest.xml')
-      for line in readfile('AndroidManifest.xml')
+    if filereadable('AndroidManifest.xml') || filereadable('app/AndroidManifest.xml')
+      if filereadable('AndroidManifest.xml')
+        let l:manifest_xml = 'AndroidManifest.xml'
+      else
+        let l:manifest_xml = 'app/AndroidManifest.xml'
+      endif
+      for line in readfile(l:manifest_xml)
         if line =~ 'package='
           let s:androidPackageName = matchstr(line, '\cpackage=\([''"]\)\zs.\{-}\ze\1')
           if empty("s:androidPackageName")

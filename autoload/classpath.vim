@@ -65,9 +65,15 @@ endfunction
 function! s:addGradleClassPath(dir, paths, jars)
 
   let l:gradle = a:dir . '/build.gradle'
+  let l:app_gradle = a:dir . '/app/build.gradle'
 
-  if filereadable(l:gradle)
-    for line in readfile(l:gradle)
+  if filereadable(l:gradle) || filereadable(l:app_gradle)
+    if filereadable(l:gradle)
+      let l:real_gradle = l:gradle
+    else
+      let l:real_gradle = l:app_gradle
+    endif
+    for line in readfile(l:real_gradle)
       let sanitized_line = substitute(line, "\'", '"', "g")
       let mlist = matchlist(sanitized_line, 'compile\s\+project\s*("\([^"]*\)")')
       if empty(mlist) == 0 && len(mlist[1]) > 0
@@ -111,8 +117,13 @@ endfunction
 
 " Add the android.jar and source path for the SDK version defined in the AndroidManifest.xml
 function! s:addManifestSdkJar(paths, jars)
-  if filereadable('AndroidManifest.xml')
-    for line in readfile('AndroidManifest.xml')
+  if filereadable('AndroidManifest.xml') || filereadable('app/AndroidManifest.xml')
+    if filereadable('AndroidManifest.xml')
+      let l:manifest_xml = 'AndroidManifest.xml'
+    else
+      let l:manifest_xml = 'app/AndroidManifest.xml'
+    endif
+    for line in readfile(l:manifest_xml)
       if line =~ 'android:targetSdkVersion='
         let l:androidTarget = matchstr(line, '\candroid:targetSdkVersion=\([''"]\)\zs.\{-}\ze\1')
         let l:androidTargetPlatform = 'android-' . l:androidTarget
@@ -133,8 +144,13 @@ endfunction
 " Add the android.jar for the SDK version defined in the build.gradle and the
 " android sources path.
 function! s:addGradleSdkJar(paths, jars)
-  if filereadable('build.gradle')
-    for line in readfile('build.gradle')
+  if filereadable('build.gradle') || filereadable('app/build.gradle')
+    if filereadable('build.gradle')
+      let l:real_gradle = 'build.gradle'
+    else
+      let l:real_gradle = 'app/build.gradle'
+    endif
+    for line in readfile(l:real_gradle)
       if line =~ 'compileSdkVersion'
         let l:androidTarget = split(line, ' ')[-1]
         if stridx(l:androidTarget, ':') > 0
